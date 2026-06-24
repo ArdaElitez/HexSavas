@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hex Savaş - Otomatik Savaş Oyunu</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,700,1,0"
+    rel="stylesheet" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⬡</text></svg>">
+  <link rel="apple-touch-icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='30' fill='%230a0a12'/><text x='96' y='130' font-size='110' text-anchor='middle' fill='%2300ccff'>⬡</text></svg>">
+  <meta name="theme-color" content="#00ccff">
+  <link rel="stylesheet" href="styles.css?v=6">
+</head>
+
+<body>
+  <script>
+    // Global wipe for all players (v4)
+    if (!localStorage.getItem('hexSavas_wipe_v4') || window.location.search.includes('reset')) {
+      localStorage.removeItem('hexSavas_activeRun');
+      localStorage.removeItem('hexSavas_settings');
+      localStorage.removeItem('hexSavas_stats');
+      localStorage.removeItem('hexSavas_achievements');
+      localStorage.removeItem('hexSavas_skins');
+      localStorage.removeItem('hexSavas_username');
+      localStorage.removeItem('hexSavas_deviceId');
+      localStorage.setItem('hexSavas_wipe_v4', '1');
+
+      if (window.location.search.includes('reset')) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  </script>
+
+  <!-- ========== BG CANVAS (tüm ekranlar için) ========== -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- ========== YUKLENME EKRANI ========== -->
+  <div id="screen-loading" class="screen active"
+    style="flex-direction:column; align-items:center; justify-content:center; z-index:9999; background:#0a0a12;">
+    <div class="logo-hex"
+      style="animation: load-spin 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; font-size:80px; margin-bottom:20px;">
+      ⬡</div>
+    <h1 class="menu-title" style="font-size:32px; margin-bottom:40px;">HEX<span class="title-accent">SAVAŞ</span></h1>
+
+    <div
+      style="width: 200px; height: 4px; background: rgba(0,200,255,0.1); border-radius: 2px; overflow: hidden; position: relative;">
+      <div id="loading-bar"
+        style="width: 0%; height: 100%; background: #0cf; transition: width 0.1s linear; box-shadow: 0 0 10px #0cf;">
+      </div>
+    </div>
+    <p id="loading-text"
+      style="font-family: 'Orbitron', sans-serif; font-size: 10px; color: #667; margin-top: 15px; letter-spacing: 2px;">
+      SAVAŞ ALANI HAZIRLANIYOR...</p>
+  </div>
+
+  <!-- ========== ANA MENÜ ========== -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-content">
+      <div class="menu-logo">
+        <div class="logo-hex">⬡</div>
+        <h1 class="menu-title">HEX<span class="title-accent">SAVAŞ</span></h1>
+        <p class="menu-subtitle">OTOMATİK SAVAŞ OYUNU</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" onclick="navigateTo('game')">
+          <span class="btn-icon">⚔️</span>
+          <span class="btn-text" style="text-align:center;">SAVAŞA BAŞLA</span>
+        </button>
+        <div class="menu-grid">
+          <button class="menu-btn grid-btn" onclick="navigateTo('howto')">
+            <span class="btn-icon">📖</span><span class="btn-text">REHBER</span>
+          </button>
+          <button class="menu-btn grid-btn" onclick="navigateTo('leaderboard')">
+            <span class="btn-icon">📊</span><span class="btn-text">SIRALAMA</span>
+          </button>
+          <button class="menu-btn grid-btn" onclick="navigateTo('achievements')">
+            <span class="btn-icon">🏆</span><span class="btn-text">BAŞARIM</span>
+          </button>
+          <button class="menu-btn grid-btn" onclick="navigateTo('meta')">
+            <span class="btn-icon">🧬</span><span class="btn-text">YETENEK</span>
+          </button>
+          <button class="menu-btn grid-btn" onclick="navigateTo('skins')">
+            <span class="btn-icon">🎨</span><span class="btn-text">SKİNLER</span>
+          </button>
+          <button class="menu-btn grid-btn accent-store" onclick="navigateTo('store')">
+            <span class="btn-icon">🛒</span><span class="btn-text">MAĞAZA <span id="menu-gem-val" class="menu-gem-badge" style="margin-left:4px">0</span></span>
+          </button>
+          <button class="menu-btn grid-btn accent-quest" onclick="navigateTo('quests')">
+            <span class="btn-icon">📅</span><span class="btn-text">GÖREV <span id="menu-quests-badge" class="menu-gem-badge" style="display:none; background:red; margin-left:4px">!</span></span>
+          </button>
+          <button class="menu-btn grid-btn" onclick="navigateTo('settings')">
+            <span class="btn-icon">⚙️</span><span class="btn-text">AYARLAR</span>
+          </button>
+        </div>
+      </div>
+      <div class="menu-footer">
+        <div class="menu-stats">
+          <div class="ms"><span class="ms-val" id="stat-best-round">0</span><span class="ms-lbl">EN İYİ RAUND</span>
+          </div>
+          <div class="ms"><span class="ms-val" id="stat-total-wins">0</span><span class="ms-lbl">TOPLAM ZAFER</span>
+          </div>
+          <div class="ms"><span class="ms-val" id="stat-total-kills">0</span><span class="ms-lbl">TOPLAM ÖLDÜRME</span>
+          </div>
+        </div>
+        <p class="version">v2.5 — 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== NASIL OYNANIR ========== -->
+  <div id="screen-howto" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">📖 NASIL OYNANIR</h2>
+        <div></div>
+      </div>
+      <div class="panel-body howto-body">
+        <div class="howto-tip">
+          💡 <b>İpucu:</b> Aynı ırktan üniteleri toplayarak güçlü sinerjiler oluştur!
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">1</div>
+          <div class="howto-icon">🛒</div>
+          <div class="howto-text">
+            <h3>DÜKKANDAN AL & YERLEŞTİR</h3>
+            <p>Altınınla dükkandan ünite al ve mavi hex hücrelere yerleştir. Satmak için üzerine tıkla/basılı tut.</p>
+          </div>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">2</div>
+          <div class="howto-icon">⭐</div>
+          <div class="howto-text">
+            <h3>ÜÇLÜ BİRLEŞİM (MERGE)</h3>
+            <p>Aynı üniteden <b>3 tane</b> topla → otomatik <b>Tier 2 (Gümüş)</b> veya <b>Tier 3 (Altın)</b> üniteye dönüşür!</p>
+          </div>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">3</div>
+          <div class="howto-icon">✨</div>
+          <div class="howto-text">
+            <h3>SİNERJİ OLUŞTUR</h3>
+            <p>Aynı ırk veya sınıfa sahip farklı üniteleri sürerek güçlü <b>Sinerji bonusları</b> kazan.</p>
+          </div>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">4</div>
+          <div class="howto-icon">🐲</div>
+          <div class="howto-text">
+            <h3>BOSS SAVAŞLARI</h3>
+            <p>Her <b>5 rauntta</b> bir Boss gelir. Yenersen <b>Boss Ruhu (👻)</b> ve başarım kazanırsın!</p>
+          </div>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">5</div>
+          <div class="howto-icon">💎</div>
+          <div class="howto-text">
+            <h3>MÜCEVHER & KASALAR</h3>
+            <p>Savaş kazanarak <b>mücevher</b> topla, <b>Mağaza</b>'dan sandık aç ve eşsiz skinler kazan!</p>
+          </div>
+        </div>
+        <div class="howto-section">
+          <h3>⚡ ÜNİTE TÜRLERİ</h3>
+          <div class="unit-list">
+            <div class="unit-row"><span class="ur-icon" style="background:#e74c3c">⚔️</span><span class="ur-name">Savaşçı</span><span class="ur-desc">İnsan / Savaşçı — Dengeli yakın dövüş</span></div>
+            <div class="unit-row"><span class="ur-icon" style="background:#2ecc71">🏹</span><span class="ur-name">Okçu</span><span class="ur-desc">Orman / Avcı — Uzak menzil, çift vuruş</span></div>
+            <div class="unit-row"><span class="ur-icon" style="background:#3498db">🛡️</span><span class="ur-name">Şövalye</span><span class="ur-desc">İnsan / Muhafız — Yüksek zırh</span></div>
+            <div class="unit-row"><span class="ur-icon" style="background:#9b59b6">🔮</span><span class="ur-name">Büyücü</span><span class="ur-desc">Ateş / Büyücü — Alan hasarı</span></div>
+            <div class="unit-row"><span class="ur-icon" style="background:#e67e22">🪓</span><span class="ur-name">Berserker</span><span class="ur-desc">Ateş / Savaşçı — Canı azaldıkça güçlenir</span></div>
+            <div class="unit-row"><span class="ur-icon" style="background:#1abc9c">💚</span><span class="ur-name">Şifacı</span><span class="ur-desc">Orman / Büyücü — Takımı iyileştirir</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SIRALAMA TABLOSU ========== -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">📊 SIRALAMA TABLOSU</h2>
+        <button class="lb-refresh-btn"
+          onclick="if(typeof leaderboardManager!=='undefined')leaderboardManager.renderToDOM('leaderboard-list')">🔄</button>
+      </div>
+      <div class="panel-body">
+        <div class="lb-header-stats">
+          <div class="lb-stat-card">
+            <div class="lb-stat-icon">🏆</div>
+            <div class="lb-stat-val" id="lb-best-score">0</div>
+            <div class="lb-stat-lbl">1. SKOR</div>
+          </div>
+          <div class="lb-stat-card">
+            <div class="lb-stat-icon">👥</div>
+            <div class="lb-stat-val" id="lb-total-games">0</div>
+            <div class="lb-stat-lbl">OYUNCU</div>
+          </div>
+          <div class="lb-stat-card">
+            <div class="lb-stat-icon">⭐</div>
+            <div class="lb-stat-val" id="lb-avg-score">0</div>
+            <div class="lb-stat-lbl">ORT. SKOR</div>
+          </div>
+        </div>
+        <div class="lb-sort-tabs">
+          <button class="lb-sort-btn active" data-sort="score" onclick="leaderboardManager.switchSort('score')">⭐
+            SKOR</button>
+          <button class="lb-sort-btn" data-sort="round" onclick="leaderboardManager.switchSort('round')">🏰
+            ROUND</button>
+          <button class="lb-sort-btn" data-sort="wins" onclick="leaderboardManager.switchSort('wins')">⚔️ ZAFER</button>
+          <button class="lb-sort-btn" data-sort="kills" onclick="leaderboardManager.switchSort('kills')">💀
+            ÖLDÜRME</button>
+        </div>
+        <div id="leaderboard-list" class="lb-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== BAŞARIMLAR ========== -->
+  <div id="screen-achievements" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">🏆 BAŞARIMLAR</h2>
+        <div></div>
+      </div>
+      <div class="panel-body">
+        <div id="achievements-list" class="achievements-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SKİNLER ========== -->
+  <div id="screen-skins" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">🎨 ÜNİTE SKİNLERİ</h2>
+        <div></div>
+      </div>
+      <div class="panel-body">
+        <div id="skins-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MAĞAZA (STORE) ========== -->
+  <div id="screen-store" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">🛒 MAĞAZA</h2>
+        <div></div>
+      </div>
+      <div class="panel-body">
+        <div id="store-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== YETENEKLER (META-PROGRESSION) ========== -->
+  <div id="screen-meta" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">🧬 YETENEKLER</h2>
+        <div class="meta-soul-display" style="color:#0f8; font-weight:bold; font-size:18px;">
+          <span class="soul-icon">👻</span> <span class="soul-count-val">0</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="meta-desc-box">
+          Savaşlarda yendiğin Bosslardan düşen <b>Boss Ruhları (👻)</b> ile kalıcı güçlendirmeler al. Tüm oyunlarında geçerli!
+        </div>
+        <div id="meta-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== GÜNLÜK GÖREVLER ========== -->
+  <div id="screen-quests" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">📅 GÜNLÜK GÖREVLER</h2>
+        <div></div>
+      </div>
+      <div class="panel-body">
+        <div id="quests-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== AYARLAR ========== -->
+  <div id="screen-settings" class="screen">
+    <div class="panel-page">
+      <div class="panel-header">
+        <button class="back-btn" onclick="navigateTo('menu')">← GERİ</button>
+        <h2 class="panel-title">⚙️ AYARLAR</h2>
+        <div></div>
+      </div>
+      <div class="panel-body">
+        <div class="settings-group">
+          <h3 class="sg-title">👤 HESAP</h3>
+          <div class="setting-row" id="account-login-row">
+            <div class="sr-info"><span class="sr-label">Oturum</span><span class="sr-desc" id="account-desc">Sıralamaya
+                girmek için kayıt ol!</span></div>
+            <div class="sr-control">
+              <button id="account-action-btn" class="menu-btn primary" style="padding:8px 16px; min-height:0; margin:0;"
+                onclick="handleAccountAction()">GİRİŞ YAP</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3 class="sg-title">🎮 OYUN</h3>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Savaş Hızı</span><span class="sr-desc">Otomatik savaşın hızını
+                ayarla</span></div>
+            <div class="sr-control">
+              <select id="set-speed" onchange="saveSetting('combatSpeed',this.value)">
+                <option value="0.5">0.5x Yavaş</option>
+                <option value="1" selected>1x Normal</option>
+                <option value="1.5">1.5x Hızlı</option>
+                <option value="2">2x Çok Hızlı</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3 class="sg-title">🔊 SES</h3>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Ses Efektleri</span><span class="sr-desc">Saldırı, beceri
+                sesleri</span></div>
+            <div class="sr-control"><input type="range" id="set-sfx" min="0" max="1" step="0.1" value="0.5"
+                onchange="saveSetting('sfxVolume',this.value); if(typeof AudioManager!=='undefined')AudioManager.setSfxVolume(this.value)">
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Müzik</span><span class="sr-desc">Arka plan müziği</span></div>
+            <div class="sr-control"><input type="range" id="set-music" min="0" max="1" step="0.1" value="0.3"
+                onchange="saveSetting('musicVolume',this.value); if(typeof AudioManager!=='undefined')AudioManager.setMusicVolume(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3 class="sg-title">🎨 GÖRSEL</h3>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Parçacık Efektleri</span><span class="sr-desc">Arka plan
+                animasyonları</span></div>
+            <div class="sr-control"><label class="toggle"><input type="checkbox" id="set-particles" checked
+                  onchange="saveSetting('particles',this.checked)"><span class="slider"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Hasar Sayıları</span><span class="sr-desc">Savaş sırasında hasar
+                göstergesi</span></div>
+            <div class="sr-control"><label class="toggle"><input type="checkbox" id="set-dmgnums" checked
+                  onchange="saveSetting('dmgNumbers',this.checked)"><span class="slider"></span></label></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">Ekran Sarsıntısı</span><span class="sr-desc">Saldırılarda
+                titreşim efekti</span></div>
+            <div class="sr-control"><label class="toggle"><input type="checkbox" id="set-shake" checked
+                  onchange="saveSetting('screenShake',this.checked)"><span class="slider"></span></label></div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h3 class="sg-title">💾 VERİ</h3>
+          <div class="setting-row">
+            <div class="sr-info"><span class="sr-label">İstatistikleri Sıfırla</span><span class="sr-desc">Tüm kayıtlı istatistikleri temizle</span></div>
+            <div class="sr-control"><button class="danger-btn" onclick="resetStats()">SIFIRLA</button></div>
+          </div>
+        </div>
+        <div class="settings-version">
+          <p>HEX SAVAŞ v2.5</p>
+          <p style="font-size:10px; color:#445; margin-top:4px;">© 2026 — Otomatik Savaş Oyunu</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== OYUN EKRANI ========== -->
+  <div id="screen-game" class="screen">
+    <div id="game">
+      <div id="topbar">
+        <div class="top-left">
+          <button class="topbar-btn" onclick="navigateTo('menu')" title="Ana Menü">🏠</button>
+          <button class="topbar-btn" onclick="surrenderGame()" title="Pes Et"
+            style="margin-left: 4px; font-size: 14px; background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5);">🏳️</button>
+          <div class="gold" onclick="if(typeof handleSecretTap==='function')handleSecretTap()">💰 <span
+              id="gold-val">10</span></div>
+          <div class="gem-display">💎 <span id="gem-val">0</span></div>
+          <div class="lives" id="lives-bar"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;min-height:0px;">
+          <span class="streak" id="streak-tag" style="display:none"></span>
+          <div class="round" style="display:none;">RAUND: <span id="round-val">1</span></div>
+        </div>
+        <div id="phase-tag" class="phase-label phase-prep">HAZIRLIK</div>
+      </div>
+      <div id="battlefield">
+        <canvas id="hex-canvas"></canvas>
+        <div id="phase-overlay"></div>
+        <div id="tooltip">
+          <div class="tt-name"></div>
+          <div class="tt-stat"></div>
+        </div>
+
+        <!-- SİNERJİ PANELİ -->
+        <div id="synergy-wrapper">
+          <button id="btn-synergy-toggle" onclick="const p = document.getElementById('synergy-panel'); p.style.display = p.style.display === 'none' ? 'block' : 'none';">
+            📊 SİNERJİLER
+          </button>
+          <div id="synergy-panel" style="display:none;">
+            <div id="synergy-list"></div>
+          </div>
+        </div>
+
+        <!-- YETENEK PANELİ -->
+        <div id="spell-panel" style="display:none;">
+          <button id="btn-meteor" onclick="castMeteor()" title="Göktaşı (5 Rauntta 1 Kez)">☄️</button>
+        </div>
+      </div>
+      <div id="bottom">
+        <div id="controls">
+          <div style="display:flex; width:100%; justify-content:space-between; align-items:stretch; gap:6px;">
+            <button id="btn-lock" onclick="toggleShopLock()"
+              style="background:#555; color:#fff; border:1px solid #777; width:44px; border-radius:8px; flex-shrink:0;"
+              title="Dükkanı Kilitle">🔓</button>
+            <button id="btn-refresh" onclick="refreshShop()" style="flex:1;">🔄 YENİLE (1💰)</button>
+            <button id="btn-fight" onclick="startCombat()" style="flex:1.5; margin:0;">⚔️ SAVAŞ BAŞLAT</button>
+          </div>
+          <div style="width:100%; text-align:center; margin-top:4px;">
+            <span style="font-size:11px;color:#667" id="hint-text">Dükkandan ünite al, tahtaya tıklayarak yerleştir</span>
+          </div>
+        </div>
+        <div id="shop"></div>
+
+        <!-- SATIŞ ALANI (Sürükle bırak) -->
+        <div id="sell-zone"
+          style="display:none; position:absolute; bottom:110px; left:50%; transform:translateX(-50%); background:rgba(255, 30, 30, 0.9); color:white; padding:15px 40px; border-radius:12px; border:2px dashed white; font-weight:bold; font-size:16px; z-index:90; pointer-events:none; transition:0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+          💰 BURAYA SÜRÜKLEYİP SAT
+        </div>
+
+        <!-- DEV MENU (HIDDEN BY DEFAULT) -->
+        <div id="dev-menu"
+          style="display:none; position:absolute; top:80px; left:10px; width:calc(100% - 20px); max-width:350px; background:rgba(20,0,20,0.95); border:1px solid #f0f; border-radius:8px; padding:10px; flex-wrap:wrap; gap:8px; z-index:100; box-shadow: 0 0 20px rgba(255,0,255,0.4);">
+          <div id="dev-menu-header"
+            style="width:100%; text-align:center; font-family:'Orbitron',sans-serif; color:#f0f; font-size:12px; margin-bottom:4px; cursor:move; padding:5px; background:rgba(255,0,255,0.1); border-radius:4px;">
+            🔧 GELİŞTİRİCİ MODU (Sürükle)</div>
+          <button onclick="gold+=500; updateGoldUI();"
+            style="flex:1; background:#330; border:1px solid #fa0; color:#fa0; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">+1000
+            ALTIN</button>
+          <button onclick="playerLives+=1; updateLivesUI();"
+            style="flex:1; background:#300; border:1px solid #f44; color:#f44; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">+5
+            CAN</button>
+          <button onclick="devAutoWin()"
+            style="flex:1; background:#030; border:1px solid #0f8; color:#0f8; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">TUR
+            ATLA</button>
+          <button onclick="devMaxUnits()"
+            style="flex:1; background:#303; border:1px solid #d0d; color:#d0d; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">MAX
+            SEVİYE</button>
+          <button onclick="round+=5; updatePhaseUI();"
+            style="flex:1; background:#003; border:1px solid #44f; color:#44f; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">+5
+            TUR</button>
+          <button onclick="playerUnits.forEach(u=>{u.hp=u.maxHp}); render();"
+            style="flex:1; background:#033; border:1px solid #0ff; color:#0ff; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">FULL
+            CAN</button>
+          <button onclick="enemyUnits.forEach(u=>u.hp=0);"
+            style="flex:1; min-width:40%; background:#311; border:1px solid #f22; color:#f22; padding:8px; border-radius:4px; font-weight:bold; font-size:11px;">DÜŞMANLARI
+            YOK ET</button>
+          <button onclick="document.getElementById('dev-menu').style.display='none'; devMode=false; secretTapCount=0;"
+            style="width:100%; background:#222; border:1px solid #555; color:#aaa; padding:6px; border-radius:4px; margin-top:4px;">KAPAT</button>
+        </div>
+      </div>
+
+      <script>
+        const devMenu = document.getElementById('dev-menu');
+        const devHeader = document.getElementById('dev-menu-header');
+        let isDraggingDev = false, devStartX, devStartY, devInitialX, devInitialY;
+        const dragStart = (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          isDraggingDev = true;
+          devStartX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+          devStartY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+          devInitialX = devMenu.offsetLeft;
+          devInitialY = devMenu.offsetTop;
+        };
+        const dragMove = (e) => {
+          if (!isDraggingDev) return;
+          e.preventDefault();
+          const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+          const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+          devMenu.style.left = (devInitialX + currentX - devStartX) + 'px';
+          devMenu.style.top = (devInitialY + currentY - devStartY) + 'px';
+          devMenu.style.bottom = 'auto';
+          devMenu.style.right = 'auto';
+        };
+        const dragEnd = () => { isDraggingDev = false; };
+        devHeader.addEventListener('mousedown', dragStart);
+        devHeader.addEventListener('touchstart', dragStart, {passive: false});
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('touchmove', dragMove, {passive: false});
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchend', dragEnd);
+      </script>
+
+      <!-- SAVAŞ ÖZETİ OVERLAY -->
+      <div id="combat-stats-overlay" style="display:none" onclick="if(event.target===this)closeCombatStats()">
+        <div class="cs-panel">
+          <h2 class="cs-title">⚔️ SAVAŞ SONUCU</h2>
+          <div class="cs-table-container">
+            <table class="cs-table">
+              <thead>
+                <tr>
+                  <th>Ünite</th>
+                  <th>Hasar</th>
+                  <th>Alınan</th>
+                  <th>İyileş.</th>
+                  <th>Kill</th>
+                </tr>
+              </thead>
+              <tbody id="cs-tbody"></tbody>
+            </table>
+          </div>
+          <div class="cs-mvp" id="cs-mvp"></div>
+          <button class="menu-btn primary" onclick="closeCombatStats()">
+            <span class="btn-text">DEVAM ET</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SANDIK AÇMA OVERLAY -->
+  <div id="chest-open-overlay" style="display:none"></div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameover">
+    <h1 id="go-title">OYUN BİTTİ</h1>
+    <div class="go-sub" id="go-sub">Tüm canlarını kaybettin!</div>
+    <div class="go-stats">
+      <div class="go-stat">
+        <div class="val" id="go-rounds">0</div>
+        <div class="lbl">RAUND</div>
+      </div>
+      <div class="go-stat">
+        <div class="val" id="go-wins">0</div>
+        <div class="lbl">ZAFER</div>
+      </div>
+      <div class="go-stat">
+        <div class="val" id="go-kills">0</div>
+        <div class="lbl">ÖLDÜRME</div>
+      </div>
+    </div>
+    <div id="go-guest-warning"
+      style="display:none; color:#fa0; font-size:12px; margin-top:15px; font-weight:bold; background:rgba(255,170,0,0.1); padding:8px; border-radius:4px; border:1px solid #fa0;">
+      ⚠️ SKORUN KAYDEDİLMEDİ: Ayarlar'dan giriş yapmalısın!</div>
+    <button class="menu-btn primary" onclick="goToMenuFromGameOver()" style="margin-top:15px">
+      <span class="btn-icon">🏠</span><span class="btn-text">ANA MENÜYE DÖN</span>
+    </button>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="achievement-toast"></div>
+
+  <!-- KULLANICI ADI MODALI -->
+  <div id="username-modal" style="display:none">
+    <div class="um-panel">
+      <div class="um-icon">⬡</div>
+      <div class="um-tabs">
+        <button class="um-tab active" id="um-tab-register"
+          onclick="if(typeof leaderboardManager !== 'undefined') leaderboardManager.switchModalTab('register')">KAYIT
+          OL</button>
+        <button class="um-tab" id="um-tab-login"
+          onclick="if(typeof leaderboardManager !== 'undefined') leaderboardManager.switchModalTab('login')">GİRİŞ
+          YAP</button>
+      </div>
+      <h2 class="um-title" id="um-title">HESAP OLUŞTUR</h2>
+      <p class="um-desc" id="um-desc">Sıralamaya katılmak için bir isim ve şifre belirle.</p>
+      <div class="um-input-wrap">
+        <input type="text" id="username-input" class="um-input" placeholder="Kullanıcı adın..." maxlength="20"
+          autocomplete="off">
+        <div id="username-status" class="um-status"></div>
+      </div>
+      <div class="um-input-wrap" style="margin-top: 12px;">
+        <input type="password" id="password-input" class="um-input" placeholder="Şifren..." maxlength="20"
+          autocomplete="off">
+      </div>
+      <div id="username-error" class="um-error"></div>
+      <button id="username-submit" class="um-submit" disabled>KAYIT OL</button>
+      <button id="username-cancel" class="um-cancel"
+        onclick="document.getElementById('username-modal').style.display='none'">İPTAL</button>
+    </div>
+  </div>
+
+  <!-- OYUNCU PROFİLİ MODALI -->
+  <div id="player-profile-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+    <div class="pp-panel">
+      <div id="player-profile-content"></div>
+      <button class="menu-btn primary" onclick="document.getElementById('player-profile-modal').style.display='none'"
+        style="margin-top:12px">
+        <span class="btn-text">KAPAT</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="audio.js?v=6"></script>
+  <script src="meta_progression.js?v=6"></script>
+  <script src="achievements.js?v=6"></script>
+  <script src="skins.js?v=6"></script>
+  <script src="leaderboard.js?v=6"></script>
+  <script src="store.js?v=6"></script>
+  <script src="quests.js?v=6"></script>
+  <script src="screens.js?v=6"></script>
+  <script src="game.js?v=6"></script>
+  <script>
+    function closeCombatStats() {
+      document.getElementById('combat-stats-overlay').style.display = 'none';
+    }
+    function updateCombatStatsUI(units) {
+      const tbody = document.getElementById('cs-tbody');
+      tbody.innerHTML = '';
+      let mvp = null;
+      let maxScore = -1;
+
+      units.forEach(u => {
+        if (!u.combatStats) return;
+        const cs = u.combatStats;
+        const score = cs.damageDealt + (cs.healed * 2) + (cs.kills * 50);
+        if (score > maxScore) { maxScore = score; mvp = u; }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${u.emoji}</td><td>${cs.damageDealt}</td><td>${cs.damageTaken}</td><td>${cs.healed || '-'}</td><td>${cs.kills || '-'}</td>`;
+        tbody.appendChild(tr);
+
+        // Reset for next round
+        u.combatStats = { damageDealt: 0, damageTaken: 0, healed: 0, kills: 0 };
+      });
+
+      const mvpEl = document.getElementById('cs-mvp');
+      if (mvp && maxScore > 0) {
+        mvpEl.innerHTML = `🌟 MVP: <b>${mvp.emoji} ${mvp.name}</b> (${maxScore} Puan)`;
+      } else {
+        mvpEl.innerHTML = '';
+      }
+
+      document.getElementById('combat-stats-overlay').style.display = 'flex';
+      // Auto-close after 5 seconds
+      setTimeout(closeCombatStats, 5000);
+    }
+  </script>
+
+  <style>
+    @keyframes load-spin {
+      0% {
+        transform: rotate(0deg) scale(1);
+      }
+
+      50% {
+        transform: rotate(180deg) scale(1.2);
+        filter: drop-shadow(0 0 30px rgba(0, 200, 255, 0.8));
+      }
+
+      100% {
+        transform: rotate(360deg) scale(1);
+      }
+    }
+  </style>
+
+  <script>
+    // Profesyonel Yükleme Ekranı Mantığı
+    window.addEventListener('load', () => {
+      const texts = ["VERİTABANI EŞİTLENİYOR...", "SİNERJİLER HESAPLANIYOR...", "BİRLİKLER UYANDIRILIYOR...", "SAVAŞ ALANI HAZIRLANIYOR..."];
+      let textIdx = 0;
+      const textEl = document.getElementById('loading-text');
+      const barEl = document.getElementById('loading-bar');
+
+      let progress = 0;
+      const loadingInterval = setInterval(() => {
+        progress += Math.random() * 12 + 3; // 3 ile 15 arası artış
+        if (progress >= 100) progress = 100;
+        barEl.style.width = progress + '%';
+
+        if (progress > 20 && textIdx === 0) { textIdx++; textEl.textContent = texts[textIdx]; }
+        if (progress > 50 && textIdx === 1) { textIdx++; textEl.textContent = texts[textIdx]; }
+        if (progress > 80 && textIdx === 2) { textIdx++; textEl.textContent = texts[textIdx]; }
+
+        if (progress === 100) {
+          clearInterval(loadingInterval);
+          setTimeout(() => {
+            const loadScreen = document.getElementById('screen-loading');
+            loadScreen.classList.add('fade-out');
+            setTimeout(() => {
+              loadScreen.classList.remove('active');
+              loadScreen.classList.remove('fade-out');
+              if (typeof navigateTo === 'function') navigateTo('menu'); // Ana menüye geçiş
+            }, 400); // fade-out süresi
+          }, 400); // %100 olduktan sonra biraz bekle
+        }
+      }, 150);
+    });
+  </script>
+</body>
+
+</html>

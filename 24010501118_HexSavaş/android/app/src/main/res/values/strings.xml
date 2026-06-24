@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hex Savas</string>
+    <string name="title_activity_main">Hex Savas</string>
+    <string name="package_name">com.hexsavas.game</string>
+    <string name="custom_url_scheme">com.hexsavas.game</string>
+</resources>
