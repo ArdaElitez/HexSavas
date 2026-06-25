@@ -105,32 +105,32 @@ Projede yapılan değişiklikleri Android uygulamasına aktarmak ve APK oluştur
 ### Ana Menü
 Oyunun ana menü ekranı. Savaş, Rehber, Sıralama, Başarım, Yetenek, Skinler, Mağaza, Görev ve Ayarlar bölümlerine erişim sağlar.
 
-![Ana Menü](screenshots/main_menu.png)
+![Ana Menü](24010501118_HexSavaş/screenshots/main_menu.png)
 
 ### Savaş Hazırlık Ekranı
 Hex tabanlı savaş alanı. Oyuncu alt kısımdaki dükkandan birim satın alıp mavi hex hücrelere yerleştirir. Üstte altın, can ve sinerji bilgileri bulunur.
 
-![Savaş Ekranı](screenshots/battle_screen.png)
+![Savaş Ekranı](24010501118_HexSavaş/screenshots/battle_screen.png)
 
 ### Rehber (Nasıl Oynanır)
 Oyun mekaniklerinin anlatıldığı rehber ekranı. Birim yerleştirme, birleştirme (merge), sinerji, boss savaşları ve mücevher sistemi açıklanır.
 
-![Rehber](screenshots/guide_screen.png)
+![Rehber](24010501118_HexSavaş/screenshots/guide_screen.png)
 
 ### Mağaza
 Mücevherlerle sandık satın alınabilen mağaza ekranı. Bronz, Gümüş, Altın ve Efsanevi sandık türleri ve günlük ücretsiz kasa özelliği mevcuttur.
 
-![Mağaza](screenshots/store.png)
+![Mağaza](24010501118_HexSavaş/screenshots/store.png)
 
 ### Ünite Skinleri
 Birimlere özel kostüm (skin) sistemi. Yaygın, Nadir, Destansı, Efsanevi ve Mitik nadirlik seviyelerinde skinler bulunur. Sandıklardan veya başarımlardan açılır.
 
-![Skinler](screenshots/skins.png)
+![Skinler](24010501118_HexSavaş/screenshots/skins.png)
 
 ### Başarımlar
 22 adet başarım ile oyuncunun ilerlemesini takip eden sistem. Her başarım mücevher ödülü verir.
 
-![Başarımlar](screenshots/achievements.png)
+![Başarımlar](24010501118_HexSavaş/screenshots/achievements.png)
 
 ## 🔗 Proje Bağlantısı
 - **GitHub Reposu:** [https://github.com/ArdaElitez/HexSavas]
