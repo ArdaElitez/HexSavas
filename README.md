@@ -100,6 +100,23 @@ Projede yapılan değişiklikleri Android uygulamasına aktarmak ve APK oluştur
 4. **Sinerjiler:** Farklı ırk ve sınıflardaki birimleri tahtaya sürerek kombo (sinerji) bonusları kazanın.
 5. **Savaş:** "Savaş Başlat" butonuna tıkladığınızda otomatik savaş başlar. Turlar geçtikçe zorlaşır, her 5 turda bir "Boss" gelir.
 
+## 📊 Sistem Performansı ve Test Yapısı
+
+**Performans Raporu (Mock)**
+
+```text
+Backend (Node.js & Express):
+  API Yüklenme Hızı         ████████████████████ < 40ms
+  Veritabanı Okuma (MongoDB)██████████████████░░ < 60ms
+  Oyun Motoru Senkronu      ███████████████████░ < 50ms
+-------------------------------------------------------
+  SİSTEM KARARLILIĞI        ███████████████████░ 98%
+
+Frontend (HTML5 Canvas & JS):
+  Mobil Uyumluluk           ████████████████████ 100%
+  Canlı DOM/Canvas Render   ████████████████████ 60 FPS
+```
+
 ## 📸 Ekran Görüntüleri
 
 ### Ana Menü
