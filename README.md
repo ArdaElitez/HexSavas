@@ -86,7 +86,6 @@ HexSavas/
 ├── package.json                # Proje bağımlılıkları (Mongoose, Capacitor vb.)
 ├── android_guncelle.ps1        # Yeni kodları www'dan android/app'e aktaran script
 ├── build_apk.bat               # Otomatik Android derleme scripti
-└── 24010501118.md              # Teslim dokümanı (Bu dosya)
 ```
 
 ---
