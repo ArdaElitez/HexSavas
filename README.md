@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="https://img.icons8.com/color/96/000000/hexagonal.png" alt="Hex Savaş Logo">
-  <h1>Hex Savaş</h1>
+  <h1>⬢ Hex Savaş ⬢</h1>
   <p><strong>Öğrenci Adı Soyadı:</strong> Arda Elitez | <strong>Öğrenci Numarası:</strong> 24010501118</p>
 
   [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android-green.svg?style=for-the-badge)]()
@@ -47,13 +46,13 @@ graph TD;
     C -->|REST API| D
     D -->|Mongoose| E[(MongoDB)]
     
-    subgraph Frontend Modülleri
+    subgraph Frontend[Frontend Modülleri]
         B1(Oyun Motoru - game.js)
         B2(Mağaza & Skinler)
         B3(Başarımlar & Meta)
         B4(Ses & UI)
     end
-    B -.-> Frontend Modülleri
+    B -.-> Frontend
 ```
 
 | Katman | Teknoloji / Araç | Görevi |
